@@ -31,13 +31,13 @@ class WikipediaNLP:
         self.nlp = None
         self.nlp_doc = None
 
-    def run(self, show_all_results=False):
+    def run(self, show_all_results=False, save=False):
         self.corpus = self.get_corpus_from_wikipedia_page()
         # Download the language model if not present, then load it in
         spacy.cli.download(SPACY_LANG_MODEL)
         self.nlp = spacy.load(SPACY_LANG_MODEL)
         self.nlp_doc = self.process_corpus()
-        self.print_tokens(show_all_results=show_all_results, save=True)
+        self.print_tokens(show_all_results=show_all_results, save=save)
 
     def get_corpus_from_wikipedia_page(self):
         pages = wikipedia.search(self.word)
@@ -53,7 +53,9 @@ class WikipediaNLP:
         print('Processing corpus')
         return self.nlp(self.corpus)
 
-    def print_tokens(self, save=False, file_name='wiki_nlp_doc.csv', show_all_results=False):
+    def print_tokens(self, save=False, file_name=None, show_all_results=False):
+        if file_name is None:
+            file_name = f'wiki_nlp_{self.word}.csv'
         chart = pandas.DataFrame(
             {'Token': self.nlp_doc,
              'Lemma': [t.lemma_ for t in self.nlp_doc],
@@ -76,6 +78,8 @@ def get_cli_args():
     arg_parser = argparse.ArgumentParser('Process a wikipedia page')
     arg_parser.add_argument('word')
     arg_parser.add_argument('--all', '-a', action='store_true')
+    arg_parser.add_argument('--save', '-s', action='store_true')
+
     return arg_parser.parse_args()
 
 
@@ -85,4 +89,4 @@ if __name__ == '__main__':
 
     print(f'Arbitrary word: {args.word}')
     wiki_nlp = WikipediaNLP(args.word)
-    wiki_nlp.run(args.all)
+    wiki_nlp.run(args.all, args.save)
